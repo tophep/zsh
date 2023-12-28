@@ -1,1 +1,1 @@
-ln -s ~/.zshrc ./.zshrc
+ln -s $(pwd)/.zshrc $HOME/.zshrc
