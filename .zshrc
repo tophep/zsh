@@ -20,24 +20,65 @@ export NVM_DIR="$HOME/.nvm"
 # postgresql
 export PATH="/Applications/Postgres.app/Contents/Versions/16/bin:$PATH"
 
+# Rust
+export PATH="$HOME/.cargo/bin:$PATH"
+
 # git
-alias pull="git pull origin $(git branch --show-current)"
+
 alias main="git checkout main"
+alias hist="git --no-pager log --decorate=short --pretty=oneline -n10"
+
+alias stow="git add -A && git commit --no-verify -m 'Roll this back'"
+alias unstow="git reset HEAD^"
+
+alias stash="git stash --include-untracked"
+alias unstash="git stash pop"
+
+function push() {
+    local currentBranch=$(git branch --show-current);
+    git push origin $currentBranch $@;
+}
+
+function push-force() {
+    local currentBranch=$(git branch --show-current);
+    
+    # Won't overwrite if other users have pushed since last pull
+    git push --force-with-lease origin $currentBranch $@;
+}
+
+function pull() {
+    git pull origin $(git branch --show-current);
+}
+
+function pull-force() {
+    local currentBranch=$(git branch --show-current);
+    local backupBranch="backup/$currentBranch";
+    local remoteBranch="origin/$currentBranch";
+    
+    echo "Saving copy of local branch $currentBranch to $backupBranch";
+    git checkout -b $backupBranch;
+    git switch $currentBranch;
+
+    echo "Overwriting local branch $currentBranch with $remoteBranch";
+    git reset --hard $remoteBranch;
+}
 
 function branch() {
     git switch $1 || git switch -c $1;
 } 
+
 function rebase() {
     local baseBranch=${1:-main};
     git rebase $baseBranch;
 } 
-alias rebase:abort="git rebase --abort"
-alias rebase:continue="git rebase --continue"
-alias stash="git add -A && git commit --no-verify -m 'Roll this back'"
-alias unstash="git reset HEAD^"
-alias push="git push origin $(git branch --show-current)"
+
+
+
+
 
 # utilities
+alias reload="source ~/.zshrc"
+
 alias IncreaseKeyboardSpeed='defaults write -g InitialKeyRepeat -int 10;defaults write -g KeyRepeat -int 1'
 
 function killport() {
