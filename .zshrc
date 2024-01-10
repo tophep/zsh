@@ -11,6 +11,7 @@ source $ZSH/oh-my-zsh.sh
 # bun
 export BUN_INSTALL="$HOME/.bun"
 export PATH="$BUN_INSTALL/bin:$PATH"
+alias b="bun"
 
 # nvm
 export NVM_DIR="$HOME/.nvm"
@@ -26,7 +27,7 @@ export PATH="$HOME/.cargo/bin:$PATH"
 # git
 
 alias main="git checkout main"
-alias hist="git --no-pager log --decorate=short --pretty=oneline -n10"
+alias hist="git --no-pager log --decorate=short --pretty=oneline -n25"
 
 alias stow="git add -A && git commit --no-verify -m 'Roll this back'"
 alias unstow="git reset HEAD^"
@@ -47,12 +48,13 @@ function push-force() {
 }
 
 function pull() {
+    git fetch origin;
     git pull origin $(git branch --show-current);
 }
 
 function pull-force() {
     local currentBranch=$(git branch --show-current);
-    local backupBranch="backup/$currentBranch";
+    local backupBranch="backup/$currentBranch/$(date +'%Y-%m-%d@%H:%M:%S')";
     local remoteBranch="origin/$currentBranch";
     
     echo "Saving copy of local branch $currentBranch to $backupBranch";
@@ -71,9 +73,6 @@ function rebase() {
     local baseBranch=${1:-main};
     git rebase $baseBranch;
 } 
-
-
-
 
 
 # utilities
