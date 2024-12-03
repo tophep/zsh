@@ -27,7 +27,8 @@ export PATH="$HOME/.cargo/bin:$PATH"
 # git
 
 alias main="git checkout main"
-alias hist="git --no-pager log --decorate=short --pretty=oneline -n25"
+# alias hist="git --no-pager log --decorate=short --pretty=oneline --topo-order -n25"
+alias hist="git --no-pager  log -n25 --reverse --decorate=short --color --date=format-local:'%I:%M%p %y/%m/%d' --pretty=format:'%C(yellow)%h %C(reset)%cd %C(green)%ae %C(auto)%d%C(reset) %s' "
 
 alias stow="git add -A && git commit --no-verify -m 'Roll this back'"
 alias unstow="git reset HEAD^"
@@ -66,7 +67,12 @@ function pull-force() {
 }
 
 function branch() {
-    git switch $1 || git switch -c $1;
+    if [ $# -eq 1 ]; 
+    then
+        git switch $1 || git switch -c $1;
+    else 
+        git branch "$@";
+    fi
 } 
 
 function rebase() {
