@@ -81,8 +81,11 @@ function rebase() {
 } 
 
 
+
 # utilities
 alias reload="source ~/.zshrc"
+alias profile="code ~/.zshrc"
+alias zshrc="code ~/.zshrc"
 
 alias IncreaseKeyboardSpeed='defaults write -g InitialKeyRepeat -int 10;defaults write -g KeyRepeat -int 1'
 
