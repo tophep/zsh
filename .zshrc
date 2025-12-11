@@ -24,6 +24,9 @@ export PATH="/Applications/Postgres.app/Contents/Versions/16/bin:$PATH"
 # Rust
 export PATH="$HOME/.cargo/bin:$PATH"
 
+# Claude Code
+PATH="$HOME/.local/bin:$PATH"
+
 # git
 
 alias main="git checkout main"
