@@ -70,13 +70,17 @@ function pull-force() {
 }
 
 function branch() {
-    if [ $# -eq 1 ]; 
+    if [ $# -eq 0 ];
+    then
+        git branch --sort=committerdate \
+            --format='%(HEAD) %(color:yellow)%(align:15,left)%(committerdate:relative)%(end)%(color:reset) %(color:green)%(align:25,left)%(refname:short)%(end)%(color:reset) %(color:red)%(upstream:track)%(color:reset)';
+    elif [ $# -eq 1 ];
     then
         git switch $1 || git switch -c $1;
-    else 
+    else
         git branch "$@";
     fi
-} 
+}
 
 function rebase() {
     local baseBranch=${1:-main};
