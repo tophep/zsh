@@ -103,3 +103,62 @@ function killport() {
 function whichport() {
     lsof -i -P | grep LISTEN | grep $1
 }
+
+# config auto-sync
+# ~/.zshrc is a symlink into this config repo; resolve it to find the repo.
+_zshrc_repo=${${:-$HOME/.zshrc}:A:h}
+
+if [[ -d "$_zshrc_repo/.git" ]]; then
+    zmodload -F zsh/stat b:zstat
+    zmodload zsh/datetime
+
+    # Commits & pushes local .zshrc changes immediately; otherwise pulls at
+    # most once per hour. Runs disowned in the background so it never blocks.
+    function _zshrc_sync() {
+        local dirty=""
+        [[ -n $(git -C "$_zshrc_repo" status --porcelain -- .zshrc 2>/dev/null) ]] && dirty=1
+
+        if [[ -z $dirty ]]; then
+            local -a stamp
+            if zstat -A stamp +mtime "$_zshrc_repo/.git/zshrc-sync-stamp" 2>/dev/null \
+                && (( EPOCHSECONDS - stamp[1] < 3600 )); then
+                return 0
+            fi
+        fi
+
+        (
+            cd "$_zshrc_repo" || exit
+
+            # One sync at a time across all shells; clear locks left by a dead sync
+            if ! mkdir .git/zshrc-sync.lock 2>/dev/null; then
+                local -a lock
+                zstat -A lock +mtime .git/zshrc-sync.lock 2>/dev/null || exit
+                (( EPOCHSECONDS - lock[1] > 600 )) || exit
+                rmdir .git/zshrc-sync.lock 2>/dev/null && mkdir .git/zshrc-sync.lock 2>/dev/null || exit
+            fi
+            trap 'rmdir .git/zshrc-sync.lock 2>/dev/null' EXIT
+
+            [[ -n $dirty ]] && git commit -q --no-verify -m "Auto-sync .zshrc from ${HOST%%.*}" -- .zshrc
+            git pull --rebase --autostash -q origin main || git rebase --abort 2>/dev/null
+            if (( $(git rev-list --count origin/main..main 2>/dev/null) )); then
+                git push -q origin main
+            fi
+            touch .git/zshrc-sync-stamp
+        ) &>/dev/null &!
+    }
+
+    # Detect saves to .zshrc while shells are open (checked before each prompt)
+    function _zshrc_watch() {
+        local -a m
+        zstat -A m +mtime "$_zshrc_repo/.zshrc" 2>/dev/null || return 0
+        if [[ -n $_zshrc_last_mtime && $m[1] != $_zshrc_last_mtime ]]; then
+            _zshrc_last_mtime=$m[1]
+            _zshrc_sync
+        fi
+        _zshrc_last_mtime=$m[1]
+    }
+    autoload -Uz add-zsh-hook
+    add-zsh-hook precmd _zshrc_watch
+
+    _zshrc_sync
+fi
